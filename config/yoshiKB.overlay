@@ -1,0 +1,52 @@
+#include <zephyr/dt-bindings/input/input-event-codes.h>
+
+/{
+    mux: mux_controller {
+        compatible = "gpio-mux";
+        gpios = <&gpio0 6 GPIO_ACTIVE_HIGH>,  /* S0 -> Pin 0.06 */
+                <&gpio0 8 GPIO_ACTIVE_HIGH>,  /* S1 -> Pin 0.08 */
+                <&gpio0 17 GPIO_ACTIVE_HIGH>, /* S2 -> Pin 0.17 */
+                <&gpio0 20 GPIO_ACTIVE_HIGH>; /* S3 -> Pin 0.20 */
+    };
+    /*
+    Setup the forked version of Zephyr's `analog-axis` input driver,
+    'hires' means 24 bit buffering.
+    Literally, enlarged all int16_t to int32_t.
+    */
+    anin0: analog_axis_hires_0 {
+        compatible = "analog-axis-hires";
+        status = "okay";
+
+        poll-period-ms = <8>; // 8ms = ~125 Hz (ignored when poll-period-downshift-ms is set)
+        poll-period-downshift-ms = <8 5000 20 9000 100 11000 1300>;
+        // poll-period-downshift-ms = <8 200 100 7000 0>; // enable suspending
+        // poll-period-downshift-ms = <8 200 100 7000 700>; // disable suspending
+        poll-period-en-gpios = <&gpio0 12 GPIO_ACTIVE_HIGH>;
+        axis-x {
+            io-channels = <&adc 0>;
+            avdd-gpios = <&gpio0 11 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;
+            in-min = <0>;
+            in-max = <4095>;
+            in-calib-cycle = <100>;
+            in-deadzone-calib-scale-pctg = <110>;
+            out-min = <( -127 )>;
+            out-max = <(  127 )>;
+            skip-change-comparator;
+            zephyr,axis-type = <INPUT_EV_REL>;
+            zephyr,axis = <INPUT_REL_X>;
+        };
+        axis-y {
+            io-channels = <&adc 0>;
+            avdd-gpios = <&gpio0 11 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;
+            in-min = <0>;
+            in-max = <4095>;
+            in-calib-cycle = <100>;
+            in-deadzone-calib-scale-pctg = <110>;
+            out-min = <( -127 )>;
+            out-max = <(  127 )>;
+            skip-change-comparator;
+            zephyr,axis-type = <INPUT_EV_REL>;
+            zephyr,axis = <INPUT_REL_Y>;
+        };
+    };
+};
